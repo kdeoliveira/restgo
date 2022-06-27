@@ -1,0 +1,5 @@
+package restgo
+
+func Config() {
+
+}
