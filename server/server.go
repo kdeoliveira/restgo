@@ -41,12 +41,13 @@ func New(addr string, port int) *Server {
 
 func (server *Server) AddHandler(method handler.Methods, path string, handler handler.ControllerMethod) {
 	server.handlers = append(server.handlers, handler)
-	server.router.HandleFunc(path, handler).Methods(method.String())
+	server.router.HandleFunc(path, handler).Methods(method.String(), http.MethodOptions)
 }
 
 func (server *Server) Serve(callback func(server *http.Server)) (*http.Server, <-chan os.Signal) {
 	done := make(chan os.Signal, 1)
 
+	server.router.Use(mux.CORSMethodMiddleware(server.router))
 	//https://stackoverflow.com/questions/19659600/how-to-use-gorilla-mux-with-http-timeouthandler
 	// ReadTimeout is a timing constraint on the client http request imposed by the server from the moment
 	// of initial connection up to the time the entire request body has been read.
@@ -65,6 +66,7 @@ func (server *Server) Serve(callback func(server *http.Server)) (*http.Server, <
 	}
 
 	go func() {
+
 		if err := sv.ListenAndServe(); err != nil {
 			log.Println(err)
 			done <- os.Interrupt
