@@ -1,4 +1,4 @@
-package handler
+package controller
 
 import (
 	"encoding/json"
@@ -20,10 +20,7 @@ func HomeHandler(response http.ResponseWriter, _ *http.Request) {
 }
 
 func CurrentTime(response http.ResponseWriter, request *http.Request) {
-	response.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	response.Header().Set("Content-Type", "application/json")
-	response.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	response.Header().Set("Access-Control-Allow-Credentials", "true")
+
 	queries := request.URL.Query()
 	timeNow := time.Now()
 	var (

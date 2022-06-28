@@ -2,25 +2,42 @@ package main
 
 import (
 	"context"
-	"github.com/kdeoliveira/restgo/handler"
+	"github.com/kdeoliveira/restgo/controller"
 	"github.com/kdeoliveira/restgo/server"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
-func init() {
+var (
+	port   int
+	addr   string
+	remote string
+)
 
+func init() {
+	var err error
+	port, err = strconv.Atoi(os.Getenv("API_PORT"))
+	if err != nil {
+		port = 8000
+	}
+	addr = os.Getenv("API_ADDR")
+	remote = os.Getenv("API_REMOTE")
 }
 
 func main() {
 
-	httpServer := server.New("127.0.0.1", 8000)
+	httpServer := server.New(addr, port)
 
-	httpServer.AddHandler(handler.GET, "/", handler.HomeHandler)
+	httpServer.AddHandler(controller.GET, "/", controller.HomeHandler)
 
-	httpServer.AddHandler(handler.GET, "/time", handler.CurrentTime)
+	httpServer.AddHandler(controller.GET, "/time", controller.CurrentTime)
+
+	cors := controller.Cors{Remote: remote}
+
+	httpServer.AddMiddleware(cors.Middleware)
 
 	sv, done := httpServer.Serve(func(server *http.Server) {
 		log.Println("Server started successfully")

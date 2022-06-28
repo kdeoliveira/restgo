@@ -1,10 +1,10 @@
-package handler
+package controller
 
 import (
 	"net/http"
 )
 
-type ControllerMethod func(http.ResponseWriter, *http.Request)
+type Method func(http.ResponseWriter, *http.Request)
 
 type Methods uint8
 
