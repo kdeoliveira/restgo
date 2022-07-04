@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/kdeoliveira/restgo/controller"
+	"github.com/gorilla/websocket"
+	"github.com/kdeoliveira/restgo/endpoints"
 	"github.com/kdeoliveira/restgo/server"
+	ws2 "github.com/kdeoliveira/restgo/ws"
 	"log"
 	"net/http"
 	"os"
@@ -29,13 +31,32 @@ func init() {
 
 func main() {
 
+	ws := ws2.WsServer{
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+			WriteBufferSize: 1024,
+		},
+	}
+
 	httpServer := server.New(addr, port)
 
-	httpServer.AddHandler(controller.GET, "/", controller.HomeHandler)
+	httpServer.AddHandler(endpoints.GET, "/ws", func(writer http.ResponseWriter, request *http.Request) {
+		conn, err := ws.Upgrader.Upgrade(writer, request, nil)
+		if err != nil {
+			return
+		}
+		go endpoints.WsSendDateTime(conn)
+	})
 
-	httpServer.AddHandler(controller.GET, "/time", controller.CurrentTime)
+	httpServer.AddHandler(endpoints.GET, "/", endpoints.HomeHandler)
 
-	cors := controller.Cors{Remote: remote}
+	httpServer.AddHandler(endpoints.GET, "/time", endpoints.CurrentTime)
+
+	httpServer.AddHandler(endpoints.GET, "/locale", endpoints.AllLocales)
+
+	cors := endpoints.Cors{Remote: remote}
 
 	httpServer.AddMiddleware(cors.Middleware)
 
@@ -43,17 +64,17 @@ func main() {
 		log.Println("Server started successfully")
 	})
 
-	var wait = time.Second * 15
+	var wait = time.Second * 5
 	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
 
 	select {
 	case <-done:
+		log.Println("Attempting to stop gracefully")
 		err := sv.Shutdown(ctx)
 		if err != nil {
 			log.Fatal("Error occurred! ", err)
 		}
-
 	}
 
 	log.Println("Shutting down gracefully...")

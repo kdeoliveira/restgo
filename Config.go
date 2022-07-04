@@ -1,5 +1,0 @@
-package restgo
-
-func Config() {
-
-}

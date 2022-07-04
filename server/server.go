@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/kdeoliveira/restgo/controller"
+	"github.com/kdeoliveira/restgo/endpoints"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +17,7 @@ const (
 )
 
 type Server struct {
-	handlers []controller.Method
+	handlers []endpoints.Method
 	port     int
 	addr     string
 	router   *mux.Router
@@ -32,14 +32,14 @@ func New(addr string, port int) *Server {
 	}
 
 	return &Server{
-		handlers: make([]controller.Method, 0),
+		handlers: make([]endpoints.Method, 0),
 		port:     port,
 		addr:     addr,
 		router:   mux.NewRouter(),
 	}
 }
 
-func (server *Server) AddHandler(method controller.Methods, path string, handler controller.Method) {
+func (server *Server) AddHandler(method endpoints.Methods, path string, handler endpoints.Method) {
 	server.handlers = append(server.handlers, handler)
 	// Note from gorilla/mux: there must be an OPTIONS method matcher for the middleware to set the headers
 	server.router.HandleFunc(path, handler).Methods(method.String(), http.MethodOptions)

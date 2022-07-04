@@ -1,4 +1,4 @@
-package controller
+package endpoints
 
 import (
 	"encoding/json"
